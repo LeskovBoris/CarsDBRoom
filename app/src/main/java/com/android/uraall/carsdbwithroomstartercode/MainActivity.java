@@ -5,6 +5,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.room.Room;
+import androidx.room.RoomDatabase;
 
 import android.content.DialogInterface;
 import android.os.Bundle;
@@ -21,7 +23,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
 import java.util.List;
 
-import Data.DatabaseHandler;
+import Data.CarDatabase;
+//import Data.DatabaseHandler;
 import Model.Car;
 
 public class MainActivity extends AppCompatActivity {
@@ -29,7 +32,8 @@ public class MainActivity extends AppCompatActivity {
     private CarsAdapter carsAdapter;
     private ArrayList<Car> cars = new ArrayList<>();
     private RecyclerView recyclerView;
-    private DatabaseHandler dbHandler;
+    //private DatabaseHandler dbHandler;
+    private CarDatabase carDatabase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,9 +41,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         recyclerView = findViewById(R.id.recyclerView);
-        dbHandler = new DatabaseHandler(this);
+        //dbHandler = new DatabaseHandler(this);
+        carDatabase = Room.databaseBuilder(getApplicationContext(), CarDatabase.class,
+                "CarsDB").allowMainThreadQueries().build();
 
-        cars.addAll(dbHandler.getAllCars());
+        cars.addAll(carDatabase.getCarDao().getAllCars());
 
         carsAdapter = new CarsAdapter(this, cars, MainActivity.this);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
@@ -136,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
     private void deleteCar(Car car, int position) {
 
         cars.remove(position);
-        dbHandler.deleteCar(car);
+        carDatabase.getCarDao().deleteCar(car);
         carsAdapter.notifyDataSetChanged();
     }
 
@@ -147,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
         car.setName(name);
         car.setPrice(price);
 
-        dbHandler.updateCar(car);
+        carDatabase.getCarDao().updateCar(car);
 
         cars.set(position, car);
 
@@ -158,10 +164,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void createCar(String name, String price) {
 
-        long id = dbHandler.insertCar(name, price);
+        long id = carDatabase.getCarDao().addCar(new Car(0, name, price));
 
 
-        Car car = dbHandler.getCar(id);
+        Car car = carDatabase.getCarDao().getCar(id);
 
         if (car != null) {
 
